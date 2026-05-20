@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { UnifiedTool } from './registry.js';
 import { executeCommand } from '../utils/commandExecutor.js';
+import { CLI } from '../constants.js';
 
 const pingArgsSchema = z.object({
   prompt: z.string().default('').describe('Message to echo '),
@@ -32,7 +33,7 @@ export const helpTool: UnifiedTool = {
   },
   category: 'simple',
   execute: async (args, onProgress) => {
-    return executeCommand('codex', ['--help'], onProgress);
+    return executeCommand(CLI.COMMANDS.GEMINI, [CLI.FLAGS.HELP], onProgress);
   },
 };
 
@@ -43,28 +44,28 @@ export const versionTool: UnifiedTool = {
   description: 'Display version and system information',
   zodSchema: versionArgsSchema,
   prompt: {
-    description: 'Get version information for Codex CLI and MCP server',
+    description: 'Get version information for Gemini CLI and Antigravity MCP server',
   },
   category: 'simple',
   execute: async (args, onProgress) => {
     try {
-      const codexVersion = await executeCommand('codex', ['--version'], onProgress);
+      const geminiVersion = await executeCommand(CLI.COMMANDS.GEMINI, [CLI.FLAGS.VERSION], onProgress);
       const nodeVersion = process.version;
       const platform = process.platform;
 
       return `**System Information:**
-- Codex CLI: ${codexVersion.trim()}
+- Gemini CLI: ${geminiVersion.trim()}
 - Node.js: ${nodeVersion}
 - Platform: ${platform}
-- MCP Server: @cexll/codex-mcp-server v1.2.5`;
+- MCP Server: @theralley/antigravity-mcp v1.0.0`;
     } catch (error) {
       return `**System Information:**
-- Codex CLI: Not installed or not accessible
+- Gemini CLI: Not installed or not accessible
 - Node.js: ${process.version}
 - Platform: ${process.platform}
-- MCP Server: @cexll/codex-mcp-server v1.2.4
+- MCP Server: @theralley/antigravity-mcp v1.0.0
 
-*Note: Install Codex CLI with: npm install -g @openai/codex*`;
+*Note: Please make sure the 'gemini' CLI tool is installed globally.*`;
     }
   },
 };
