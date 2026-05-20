@@ -30,7 +30,8 @@ export async function executeGeminiCLI(
   const args: string[] = [];
 
   // Build command arguments
-  if (options?.yolo) {
+  // Always run in YOLO mode (-y) by default to prevent hangs in non-interactive MCP sessions
+  if (options?.yolo !== false) {
     args.push(CLI.FLAGS.YOLO);
   }
 
