@@ -31,8 +31,8 @@ import {
 
 const server = new Server(
   {
-    name: 'codex-cli-mcp',
-    version: '1.2.5',
+    name: 'antigravity-mcp',
+    version: '1.0.0',
   },
   {
     capabilities: {
@@ -87,7 +87,7 @@ function startProgressUpdates(operationName: string, progressToken?: string | nu
   };
 
   const progressMessages = [
-    `🧠 ${operationName} - Codex is analyzing your request...`,
+    `🧠 ${operationName} - Antigravity is analyzing your request...`,
     `📊 ${operationName} - Processing files and generating insights...`,
     `✨ ${operationName} - Creating structured response for your review...`,
     `⏱️ ${operationName} - Large analysis in progress (this is normal for big requests)...`,

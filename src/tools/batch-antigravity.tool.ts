@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { UnifiedTool } from './registry.js';
-import { executeCodex } from '../utils/codexExecutor.js';
-import { ERROR_MESSAGES, STATUS_MESSAGES, MODELS, SANDBOX_MODES } from '../constants.js';
+import { executeGemini } from '../utils/geminiExecutor.js';
+import { MODELS } from '../constants.js';
 
 // Define task type for batch operations
 const batchTaskSchema = z.object({
@@ -10,36 +10,37 @@ const batchTaskSchema = z.object({
   priority: z.enum(['high', 'normal', 'low']).default('normal').describe('Task priority'),
 });
 
-const batchCodexArgsSchema = z.object({
-  tasks: z.array(batchTaskSchema).min(1).describe('Array of atomic tasks to delegate to Codex'),
+const batchAntigravityArgsSchema = z.object({
+  tasks: z.array(batchTaskSchema).min(1).describe('Array of atomic tasks to delegate to Gemini'),
   model: z
     .string()
     .optional()
     .describe(`Model to use: ${Object.values(MODELS).join(', ')}`),
   sandbox: z
-    .string()
-    .default(SANDBOX_MODES.WORKSPACE_WRITE)
-    .describe(`Sandbox mode: ${Object.values(SANDBOX_MODES).join(', ')}`),
+    .boolean()
+    .optional()
+    .describe(`Run in sandbox mode`),
+  yolo: z
+    .boolean()
+    .optional()
+    .describe('Automatically accept all actions'),
+  approvalMode: z
+    .enum(['default', 'auto_edit', 'yolo', 'plan'])
+    .optional()
+    .describe('Set approval mode'),
   parallel: z.boolean().default(false).describe('Execute tasks in parallel (experimental)'),
   stopOnError: z.boolean().default(true).describe('Stop execution if any task fails'),
   timeout: z.number().optional().describe('Maximum execution time per task in milliseconds'),
   workingDir: z.string().optional().describe('Working directory for execution'),
-  search: z
-    .boolean()
-    .optional()
-    .describe('Enable web search for all tasks (activates web_search_request feature)'),
-  oss: z.boolean().optional().describe('Use local Ollama server'),
-  enableFeatures: z.array(z.string()).optional().describe('Enable feature flags'),
-  disableFeatures: z.array(z.string()).optional().describe('Disable feature flags'),
 });
 
-export const batchCodexTool: UnifiedTool = {
-  name: 'batch-codex',
+export const batchAntigravityTool: UnifiedTool = {
+  name: 'batch-antigravity',
   description:
-    'Delegate multiple atomic tasks to Codex for batch processing. Ideal for repetitive operations, mass refactoring, and automated code transformations',
-  zodSchema: batchCodexArgsSchema,
+    'Delegate multiple atomic tasks to Gemini/Antigravity for batch processing. Ideal for repetitive operations and mass refactoring.',
+  zodSchema: batchAntigravityArgsSchema,
   prompt: {
-    description: 'Execute multiple atomic Codex tasks in batch mode for efficient automation',
+    description: 'Execute multiple atomic Gemini/Antigravity tasks in batch mode',
   },
   category: 'codex',
   execute: async (args, onProgress) => {
@@ -47,14 +48,12 @@ export const batchCodexTool: UnifiedTool = {
       tasks,
       model,
       sandbox,
+      yolo,
+      approvalMode,
       parallel,
       stopOnError,
       timeout,
       workingDir,
-      search,
-      oss,
-      enableFeatures,
-      disableFeatures,
     } = args;
     const taskList = tasks as Array<{
       task: string;
@@ -89,7 +88,6 @@ export const batchCodexTool: UnifiedTool = {
     }
 
     // Execute tasks sequentially
-    // TODO: Implement parallel execution when parallel flag is true
     for (let i = 0; i < sortedTasks.length; i++) {
       const task = sortedTasks[i];
       const taskPrompt = task.target ? `${task.task} in ${task.target}` : task.task;
@@ -109,17 +107,15 @@ export const batchCodexTool: UnifiedTool = {
       }
 
       try {
-        const result = await executeCodex(
+        const result = await executeGemini(
           taskPrompt,
           {
             model: model as string,
-            sandboxMode: sandbox as any,
+            sandbox: sandbox as boolean,
+            yolo: yolo as boolean,
+            approvalMode: approvalMode as any,
             timeout: timeout as number,
             workingDir: workingDir as string,
-            search: search as boolean,
-            oss: oss as boolean,
-            enableFeatures: enableFeatures as string[],
-            disableFeatures: disableFeatures as string[],
           },
           undefined // No progress for individual tasks to keep output clean
         );
@@ -174,4 +170,11 @@ export const batchCodexTool: UnifiedTool = {
 
     return report;
   },
+};
+
+// Expose batch-gemini as an alias tool pointing to the same implementation
+export const batchGeminiTool: UnifiedTool = {
+  ...batchAntigravityTool,
+  name: 'batch-gemini',
+  description: 'Alias for batch-antigravity tool.',
 };

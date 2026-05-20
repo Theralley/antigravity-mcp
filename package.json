@@ -1,11 +1,11 @@
 {
-  "name": "@cexll/codex-mcp-server",
-  "version": "1.2.5",
-  "description": "MCP server for Codex CLI integration",
+  "name": "@theralley/antigravity-mcp",
+  "version": "1.0.0",
+  "description": "MCP server for Antigravity (Gemini CLI) integration",
   "type": "module",
   "main": "dist/index.js",
   "bin": {
-    "codex-mcp": "dist/index.js"
+    "antigravity-mcp": "dist/index.js"
   },
   "scripts": {
     "build": "tsc",
@@ -38,12 +38,12 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/cexll/codex-mcp-server.git"
+    "url": "git+https://github.com/Theralley/antigravity-mcp.git"
   },
   "bugs": {
-    "url": "https://github.com/cexll/codex-mcp-server/issues"
+    "url": "https://github.com/Theralley/antigravity-mcp/issues"
   },
-  "homepage": "https://github.com/cexll/codex-mcp-server#readme",
+  "homepage": "https://github.com/Theralley/antigravity-mcp#readme",
   "engines": {
     "node": ">=18.0.0"
   },

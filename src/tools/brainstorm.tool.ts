@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { UnifiedTool } from './registry.js';
 import { Logger } from '../utils/logger.js';
-import { executeCodexCLI } from '../utils/codexExecutor.js';
+import { executeGeminiCLI } from '../utils/geminiExecutor.js';
 
 function buildBrainstormPrompt(config: {
   prompt: string;
@@ -107,20 +107,20 @@ const brainstormArgsSchema = z.object({
   model: z
     .string()
     .optional()
-    .describe(
-      'Model: gpt-5-codex (default), gpt-5, o3, o4-mini, codex-1, codex-mini-latest, gpt-4.1'
-    ),
-  approvalPolicy: z
-    .enum(['never', 'on-request', 'on-failure', 'untrusted'])
+    .describe('Model to use (e.g. gemini-2.5-pro)'),
+  sandbox: z
+    .boolean()
     .optional()
-    .describe('Approval: never, on-request, on-failure, untrusted'),
-  sandboxMode: z
-    .enum(['read-only', 'workspace-write', 'danger-full-access'])
+    .describe('Run in sandbox mode'),
+  yolo: z
+    .boolean()
     .optional()
-    .describe('Access: read-only, workspace-write, danger-full-access'),
-  fullAuto: z.boolean().optional().describe('Full automation mode'),
-  yolo: z.boolean().optional().describe('⚠️ Bypass all safety (dangerous)'),
-  cd: z.string().optional().describe('Working directory'),
+    .describe('Automatically accept all actions (YOLO mode)'),
+  approvalMode: z
+    .enum(['default', 'auto_edit', 'yolo', 'plan'])
+    .optional()
+    .describe('Approval mode: default, auto_edit, yolo, plan'),
+  workingDir: z.string().optional().describe('Working directory for execution'),
   methodology: z
     .enum(['divergent', 'convergent', 'scamper', 'design-thinking', 'lateral', 'auto'])
     .default('auto')
@@ -140,13 +140,6 @@ const brainstormArgsSchema = z.object({
     .default(12)
     .describe('Number of ideas (default: 12, range: 5-30)'),
   includeAnalysis: z.boolean().default(true).describe('Include feasibility/impact analysis'),
-  search: z
-    .boolean()
-    .optional()
-    .describe('Enable web search for research (activates web_search_request feature)'),
-  oss: z.boolean().optional().describe('Use local Ollama server'),
-  enableFeatures: z.array(z.string()).optional().describe('Enable feature flags'),
-  disableFeatures: z.array(z.string()).optional().describe('Disable feature flags'),
 });
 
 export const brainstormTool: UnifiedTool = {
@@ -162,21 +155,16 @@ export const brainstormTool: UnifiedTool = {
     const {
       prompt,
       model,
-      approvalPolicy,
-      sandboxMode,
-      fullAuto,
+      sandbox,
       yolo,
-      cd,
+      approvalMode,
+      workingDir,
       methodology = 'auto',
       domain,
       constraints,
       existingContext,
       ideaCount = 12,
       includeAnalysis = true,
-      search,
-      oss,
-      enableFeatures,
-      disableFeatures,
     } = args;
 
     if (!prompt?.trim()) {
@@ -200,20 +188,15 @@ export const brainstormTool: UnifiedTool = {
     // Report progress to user
     onProgress?.(`Generating ${ideaCount} ideas via ${methodology} methodology...`);
 
-    // Execute with Codex (non-interactive)
-    return await executeCodexCLI(
+    // Execute with Gemini (non-interactive)
+    return await executeGeminiCLI(
       enhancedPrompt,
       {
         model: model as string | undefined,
-        fullAuto: Boolean(fullAuto),
-        approvalPolicy: approvalPolicy as any,
-        sandboxMode: sandboxMode as any,
-        yolo: Boolean(yolo),
-        cd: cd as string | undefined,
-        search: search as boolean,
-        oss: oss as boolean,
-        enableFeatures: enableFeatures as string[],
-        disableFeatures: disableFeatures as string[],
+        sandbox: sandbox as boolean | undefined,
+        yolo: yolo as boolean | undefined,
+        approvalMode: approvalMode as any,
+        workingDir: workingDir as string | undefined,
       },
       onProgress
     );

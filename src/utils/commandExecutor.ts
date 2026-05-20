@@ -22,6 +22,7 @@ export interface ExecuteOptions {
   timeoutMs?: number;
   maxOutputBytes?: number;
   retry?: RetryOptions;
+  cwd?: string;
 }
 
 /**
@@ -48,6 +49,7 @@ export async function executeCommandDetailed(
       onProgress,
       timeoutMs,
       maxOutputBytes,
+      cwd: options.cwd,
     });
 
     if (result.ok) {
@@ -77,7 +79,7 @@ export async function executeCommandDetailed(
 async function executeOnce(
   command: string,
   args: string[],
-  { onProgress, timeoutMs, maxOutputBytes }: Omit<ExecuteOptions, 'retry'>
+  { onProgress, timeoutMs, maxOutputBytes, cwd }: Omit<ExecuteOptions, 'retry'>
 ): Promise<CommandResult> {
   return new Promise(resolve => {
     const startTime = Date.now();
@@ -85,6 +87,7 @@ async function executeOnce(
 
     const childProcess = spawn(command, args, {
       env: process.env,
+      cwd,
       // cross-spawn automatically handles shell mode and .cmd extensions on Windows
       stdio: ['ignore', 'pipe', 'pipe'],
     });
