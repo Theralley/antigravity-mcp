@@ -1,0 +1,4 @@
+# Memant node-vault marker. This repo's vault/ latches into the local hub via 'memant sync'.
+name: antigravity-mcp
+namespace: antigravity-mcp        # cross-vault links use [[antigravity-mcp/<page>]]
+shareable: true         # ONLY shareable project knowledge here — it travels with the repo (git)
